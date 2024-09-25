@@ -1,19 +1,17 @@
 import numpy as np
 import matplotlib.pyplot as plt 
 
-# Datos de la tabla
 distancias = np.array([0, 50, 100, 150, 200, 250, 300])
 alturas = np.array([10, 60, 55, 70, 40, 50, 30])
 
-# Matriz de Vandermonde
 vandermonde_matrix = np.vander(distancias, increasing=True)
 
-# Calcular el número de condición de la matriz de Vandermonde
+# condicion de la matriz de vandermonde
 numero_condicion = np.linalg.cond(vandermonde_matrix)
 
 print(f"Número de condición de la matriz de Vandermonde: {numero_condicion}")
 
-# Función para calcular el polinomio de Lagrange
+# hacer lagrange
 def lagrange(x, x_points, y_points):
     n = len(x_points)
     result = 0
@@ -25,12 +23,9 @@ def lagrange(x, x_points, y_points):
         result += term
     return result
 
-# Generar puntos para graficar
 x_vals = np.linspace(0, 300, 400)
 y_vals = [lagrange(x, distancias, alturas) for x in x_vals]
 
-
-# Graficar los puntos críticos y la curva interpolada
 plt.figure(figsize=(8, 6))
 plt.plot(x_vals, y_vals, label="Curva interpolada con Lagrange", color="blue")
 plt.scatter(distancias, alturas, color="red", label="Puntos críticos")

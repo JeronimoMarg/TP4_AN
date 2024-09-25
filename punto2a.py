@@ -3,12 +3,12 @@ import random
 from scipy.interpolate import CubicSpline
 import matplotlib.pyplot as plt
 
-# Datos de la montaña rusa
 distancias = np.array([0, 50, 100, 150, 200, 250, 300])
 alturas = np.array([10, 60, 55, 70, 40, 50, 30])
+#vamos a usar los splines en este caso
 splines = CubicSpline(distancias, alturas)
 
-# Parámetros del algoritmo genético
+# parametros
 num_soportes = 20
 min_dist = 10
 max_dist = 20
@@ -17,7 +17,6 @@ tamano_poblacion = 50
 num_generaciones = 200
 tasa_mutacion = 0.1
 
-# Función para generar un individuo
 def generar_individuo():
     individuo = [0]  # Comenzamos en 0
     while len(individuo) < num_soportes:
@@ -31,7 +30,7 @@ def generar_individuo():
         return generar_individuo()
     return individuo
 
-# Función de aptitud
+# funcion de aptitud
 def evaluar_individuo(individuo):
     # evalua la altura en el punto determinado de separacion dentro de la pista
     return sum(splines(x) for x in individuo)

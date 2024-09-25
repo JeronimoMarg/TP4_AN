@@ -48,13 +48,13 @@ def ajustar_distancias(individuo):
             return generar_individuo()
     return individuo
 
-# Cruzamiento con corrección de restricciones
+# cruza (crossover)
 def crossover(ind1, ind2):
     punto_cruce = random.randint(1, num_soportes - 2)
     hijo1 = sorted(ind1[:punto_cruce] + ind2[punto_cruce:])
     hijo2 = sorted(ind2[:punto_cruce] + ind1[punto_cruce:])
     
-    # Ajustar distancias de los hijos para respetar las restricciones
+    # Aajustar distancias si se violan las restricciones
     hijo1 = ajustar_distancias(hijo1)
     hijo2 = ajustar_distancias(hijo2)
     
@@ -82,33 +82,37 @@ def seleccion_torneo(poblacion, k=3):
     mejor_individuo = min(seleccionados, key=lambda ind: evaluar_individuo(ind))
     return mejor_individuo
 
-# Algoritmo genético
+#algoritmo genetico
 def algoritmo_genetico():
-    # Generar población inicial
+    # poblacion inicial
     poblacion = [generar_individuo() for _ in range(tamano_poblacion)]
     
+    #corre para todas las veces que definimos
     for generacion in range(num_generaciones):
         nueva_poblacion = []
         
-        # Crear nueva población con crossover y mutación
+        # se genera una nueva poblacion
         while len(nueva_poblacion) < tamano_poblacion:
+
+            #torneo
             padre1 = seleccion_torneo(poblacion)
             padre2 = seleccion_torneo(poblacion)
+            #crossover
             hijo1, hijo2 = crossover(padre1, padre2)
-            
-            # Aplicar mutación
+            #mutar
             if random.random() < tasa_mutacion:
                 hijo1 = mutar_individuo(hijo1)
             if random.random() < tasa_mutacion:
                 hijo2 = mutar_individuo(hijo2)
             
+            #generacion de la poblacion nueva
             nueva_poblacion.append(hijo1)
             nueva_poblacion.append(hijo2)
         
-        # Reemplazar la población
-        poblacion = nueva_poblacion[:tamano_poblacion]  # Limitamos el tamaño de la población
+        #reemplazar la poblacion
+        poblacion = nueva_poblacion[:tamano_poblacion]
         
-        # Evaluar el mejor individuo en esta generación
+        #se fija el mejor individuo dentro de la poblacion y lo muestra en pantalla
         mejor_individuo = min(poblacion, key=lambda ind: evaluar_individuo(ind))
         mejor_aptitud = evaluar_individuo(mejor_individuo)
         print(f"Generación {generacion+1}: Mejor aptitud = {mejor_aptitud}")

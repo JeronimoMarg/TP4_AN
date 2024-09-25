@@ -28,12 +28,24 @@ min_dist = 10
 max_dist = 20
 longitud_pista = 300
 tamano_poblacion = 50
-num_generaciones = 100
+num_generaciones = 50
 tasa_mutacion = 0.1
 
 # Función para calcular la curvatura
 def calcular_curvatura(x):
     return np.abs(spl_derivada_2(x)) / (1 + spl_derivada_1(x)**2)**(3/2)
+
+# Derivar el polinomio de Vandermonde (grado 6)
+def derivada_polinomio(coef, n_derivada):
+    deriv_coef = np.polyder(coef, m=n_derivada)
+    return deriv_coef
+
+# Curvatura para el polinomio de grado 6
+def calcular_curvatura_vandermonde(x, coef):
+    y_primera_derivada = np.polyval(derivada_polinomio(coef, 1), x)
+    y_segunda_derivada = np.polyval(derivada_polinomio(coef, 2), x)
+    curvatura = np.abs(y_segunda_derivada) / (1 + y_primera_derivada**2)**(3/2)
+    return curvatura
 
 # Función para generar un individuo
 def generar_individuo():
@@ -48,16 +60,18 @@ def generar_individuo():
         return generar_individuo()
     return individuo
 
-# Función de aptitud basada en el promedio ponderado de las alturas con curvaturas como pesos
+# Modificar la función de evaluación para incluir curvatura con Vandermonde
 def evaluar_individuo(individuo, metodo='spline'):
     if metodo == 'spline':
         alturas_soportes = np.array([splines(x) for x in individuo])
         curvaturas_soportes = np.array([calcular_curvatura(x) for x in individuo])
     else:
         alturas_soportes = np.array([polinomio_vandermonde(x, coef_polinomio) for x in individuo])
-        curvaturas_soportes = np.ones(len(individuo))  # No tenemos curvatura con polinomio simple
+        curvaturas_soportes = np.array([calcular_curvatura_vandermonde(x, coef_polinomio) for x in individuo])
+    
     promedio_ponderado = np.sum(alturas_soportes * curvaturas_soportes) / np.sum(curvaturas_soportes)
     return promedio_ponderado
+
 
 # Función para ajustar las distancias entre soportes
 def ajustar_distancias(individuo):
@@ -142,35 +156,46 @@ def algoritmo_genetico(metodo='spline'):
     mejor_individuo_final = min(poblacion, key=lambda ind: evaluar_individuo(ind, metodo=metodo))
     return mejor_individuo_final
 
-# Ejecutar el algoritmo genético para splines
+# Ejecutar el algoritmo genético y graficar los mejores resultados
+
+# 1. Ejecución del algoritmo genético para Splines Cúbicos
 print("Ejecutando para Splines Cúbicos...")
 mejor_solucion_spline = algoritmo_genetico(metodo='spline')
 print("Mejor solución (Spline):", mejor_solucion_spline)
 print("Promedio ponderado de las alturas con curvatura (Spline):", evaluar_individuo(mejor_solucion_spline, metodo='spline'))
 
-# Ejecutar el algoritmo genético para Vandermonde (Polinomio de grado 6)
+# 2. Ejecución del algoritmo genético para Polinomio de Grado 6 (Vandermonde)
 print("\nEjecutando para Polinomio de Grado 6 (Vandermonde)...")
 mejor_solucion_vandermonde = algoritmo_genetico(metodo='vandermonde')
 print("Mejor solución (Vandermonde):", mejor_solucion_vandermonde)
 print("Promedio ponderado de las alturas con curvatura (Vandermonde):", evaluar_individuo(mejor_solucion_vandermonde, metodo='vandermonde'))
 
-# Graficar la mejor solución para ambos métodos
+# 3. Graficar los resultados
 x_vals = np.linspace(0, longitud_pista, 400)
 y_spline = splines(x_vals)
 y_vandermonde = polinomio_vandermonde(x_vals, coef_polinomio)
 
-plt.figure(figsize=(10, 6))
+plt.figure(figsize=(12, 8))
 
 # Curva de splines cúbicos
 plt.plot(x_vals, y_spline, label='Splines Cúbicos', color='blue')
 
 # Curva de polinomio de grado 6 (Vandermonde)
-plt.plot(x_vals, y_vandermonde, label='Polinomio Grado 6 (Vandermonde)', linestyle='--', color='red')
+plt.plot(x_vals, y_vandermonde, label='Polinomio Grado 6 (Vandermonde)', color='red')
 
-# Puntos originales
-plt.scatter(distancias, alturas, color='black', label='Puntos Originales')
 
-plt.title('Comparación: Splines Cúbicos vs Polinomio Grado 6 (Vandermonde)')
+# Graficar las mejores soluciones para ambos métodos
+soportes_spline_y = [splines(x) for x in mejor_solucion_spline]
+soportes_vandermonde_y = [polinomio_vandermonde(x, coef_polinomio) for x in mejor_solucion_vandermonde]
+
+# Soportes - Splines Cúbicos
+plt.scatter(mejor_solucion_spline, soportes_spline_y, color='blue', marker='o', s=50, zorder=5, label='Soportes (Spline)')
+
+# Soportes - Polinomio de Vandermonde
+plt.scatter(mejor_solucion_vandermonde, soportes_vandermonde_y, color='red', marker='o', s=50, zorder=5, label='Soportes (Vandermonde)')
+
+# Título y leyendas
+plt.title('Comparación de las mejores soluciones: Splines cúbicos vs Polinomio de grado 6 (Vandermonde)')
 plt.xlabel('Distancia (m)')
 plt.ylabel('Altura (m)')
 plt.legend()
